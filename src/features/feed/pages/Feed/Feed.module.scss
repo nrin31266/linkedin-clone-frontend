@@ -1,0 +1,65 @@
+.root {
+    display: grid;
+    gap: 2rem;
+    max-width: 74rem;
+    width: 100%;
+    margin: 0 auto;
+    height: 100%;
+
+    .left, .right{
+        display: none;
+    }
+
+    @media screen and (width >= 1115px){
+        grid-template-columns: 14rem 1fr 20rem;
+        .left, .right{
+            display: block;
+        }
+    }
+
+    .error{
+        color: red;
+    }
+
+
+    .posting{
+        display: grid;
+        grid-template-columns: 5rem 1fr;
+        gap: 1rem;
+        border-radius: 0.3rem;
+        border: 1px solid #e0e0e0;
+        padding: 1rem;
+        background-color: white;
+
+
+        .avatar{
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+            height: 5rem;
+            width: 5rem;
+            
+        }
+    }
+
+    .header{
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+
+        button{
+            background-color: #e0e0e0;
+            border-radius: 999px;
+            padding: 0.5rem 1rem;
+        }
+    
+        button.active{
+            background-color: var(--primary-color);
+            color: white;
+        }
+    }
+
+    
+}

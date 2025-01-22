@@ -1,0 +1,52 @@
+.root{
+   .toggle{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid #e0e0e0;
+    padding-right: 1rem;
+   }
+
+   .avatar{
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+   }
+
+   .menu{
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      padding: 1rem;
+      border-radius: 0.3rem 0 0.3rem 0.3rem;
+      position: absolute;
+      top: 5rem;
+      right: 1rem;
+      width: min(18rem, 100%);
+
+      .name{
+         font-weight: bold;
+         text-wrap: nowrap;
+      }
+   
+      .content{
+         display: grid;
+         align-items: center;
+         grid-template-columns: 4rem 1fr;
+         gap: 1rem;
+      }
+      .avatar{
+         width: 4rem;
+         height: 4rem;
+         overflow: hidden;
+         border-radius: 50%;
+      }
+      .links{
+         display: grid;
+         gap: 0.5rem;
+         margin-top: 1rem;
+      }
+   }
+
+   
+
+}

@@ -1,0 +1,14 @@
+.root{
+    .disclaimer{
+        font-size: 0.8rem;
+        color: rgba(0,0,0,0.6);
+    }
+    .errorMessage{
+        color: red;
+        margin-bottom: 1rem;
+    }
+    .message{
+        color: green;
+        margin-bottom: 1rem;
+    }
+}
