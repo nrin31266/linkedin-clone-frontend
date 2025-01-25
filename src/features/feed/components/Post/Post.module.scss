@@ -1,0 +1,104 @@
+.root {
+    background-color: white;
+    border-radius: 0.3rem;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 1rem;
+    position: relative;
+
+    .top {
+        display: flex;
+        gap: 1rem;
+
+        font-size: 0.9rem;
+        padding: 1rem;
+        justify-content: space-between;
+
+
+
+
+        .author {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+
+
+
+            .avatar {
+                width: 4rem;
+                height: 4rem;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
+            .name {
+                font-weight: bold;
+            }
+        }
+
+        .date {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        button.toggle {
+            background-color: transparent;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            transition: 0.3s;
+            
+
+
+            &:hover,
+            &.active {
+                background-color: #e0e0e0;
+            }
+        }
+
+        svg {
+            height: 0.8rem;
+            width: 0.8rem;
+        }
+
+        .menu {
+            display: flex;
+            position: absolute;
+            top: 2.7rem;
+            right: 1.2rem;
+            background-color: white;
+            border-radius: 0.3rem;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            border: 1px solid #e0e0e0;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            button {
+                width: 100%;
+                text-align: left;
+            }
+
+            button:not(:last-child) {
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 0.3rem;
+            }
+        }
+    }
+
+    .content {
+        padding: 0 1rem 1rem 1rem;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .stat {
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+        }
+    }
+}

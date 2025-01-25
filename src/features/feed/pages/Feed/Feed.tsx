@@ -3,17 +3,28 @@ import LeftSideBar from "../../components/LeftSideBar/LeftSideBar";
 import RightSideBar from "../../components/RightSideBar/RightSideBar";
 import classes from "./Feed.module.scss";
 import { useNavigate } from "react-router-dom";
-import { useAuthentication } from "../../../authentication/contexts/AuthenticationContextProvider";
+import { useAuthentication, User } from "../../../authentication/contexts/AuthenticationContextProvider";
 import Button from "../../../../components/Button/Button";
-import { Post } from "../../components/Post/Post";
 import { ErrorUtil } from "../../../../utils/errorUtils";
 import handleAPI from "../../../../configs/handleAPI";
+import Post from "../../components/Post/Post";
+
+export interface PostModel {
+  id: number;
+  content: string;
+  author: User;
+  picture?: string;
+  likes?: User[];
+  comments?: Comment[];
+  creationDate: string;
+  updatedDate?: string;
+}
 
 const Feed = () => {
   const { user } = useAuthentication();
   const navigate = useNavigate();
   const [showPostingModal, setShowPostingModal] = useState(false);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostModel[]>([]);
   const [error, setError] = useState("");
   const [feedContent, setFeedContent] = useState<"all" | "connexions">(
     "connexions"
@@ -23,7 +34,7 @@ const Feed = () => {
     const fetchPosts =async ()=>{
       try {
         const res = await handleAPI(`/feed${feedContent==="connexions"?"":"/posts"}`)
-        console.log(res);
+        setPosts(res.data.data)
       } catch (error) {
         if(ErrorUtil.isErrorResponse(error)){
           setError(error.message);
@@ -79,9 +90,9 @@ const Feed = () => {
           </button>
         </div>
         <div className={classes.feed}>
-          {/* {posts.map((post) => (
+          {posts.map((post) => (
             <Post key={post.id} post={post} setPosts={setPosts} />
-          ))} */}
+          ))}
         </div>
       </div>
       <div className={classes.right}>
