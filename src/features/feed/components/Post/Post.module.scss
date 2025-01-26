@@ -101,4 +101,30 @@
             font-size: 0.8rem;
         }
     }
+
+    .actions{
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem;
+        border-top: 1px solid #e0e0e0;
+        gap: 1rem;
+    }
+
+    
+
+    button{
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+
+        svg{
+            width: 1rem;
+            height: 1rem;
+        }
+
+        &.active{
+            color: var(--primary-color);
+        }
+    }
 }

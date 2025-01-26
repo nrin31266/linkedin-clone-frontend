@@ -27,7 +27,7 @@ const Feed = () => {
   const [posts, setPosts] = useState<PostModel[]>([]);
   const [error, setError] = useState("");
   const [feedContent, setFeedContent] = useState<"all" | "connexions">(
-    "connexions"
+    "all"
   );
 
   useEffect(() => {
