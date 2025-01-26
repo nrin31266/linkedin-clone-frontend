@@ -1,14 +1,16 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction, useEffect, useState } from "react";
 import classes from "./Post.module.scss";
 import {
   useAuthentication,
   User,
 } from "../../../authentication/contexts/AuthenticationContextProvider";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import { PostModel } from "../../pages/Feed/Feed";
 import handleAPI from "../../../../configs/handleAPI";
 import { ErrorUtil } from "../../../../utils/errorUtils";
 import Input from "../../../../components/Input/Input";
+import { DateUtils } from "../../../../utils/dateUtils";
+import Comment from "../Comment/Comment";
 
 interface PostProps {
   post: PostModel;
@@ -49,6 +51,84 @@ const Post = ({ post, setPosts }: PostProps) => {
     }
   }
 
+  const editComment = async (id: number, updateContent: string) =>{
+      try {
+        await handleAPI(`/feed/posts/${id}/comment`, {content: updateContent}, "put");
+        setPosts((pre)=>pre.map((p)=>{
+          if(p.id === post.id){
+            return {
+              ...p, comments: p.comments?.map((cm)=>{
+                if(cm.id === id){
+                  return {
+                    ...cm, updatedDate: new Date().toISOString(), content: updateContent
+                  }
+                }else{
+                  return cm;
+                }
+              })
+            }
+          }else{
+            return p;
+          }
+        }));
+
+      } catch (error) {
+        if(ErrorUtil.isErrorResponse(error)){
+          console.log(error.message);
+        }
+      }
+  }
+
+  const deleteComment = async (id: number)=>{
+    try {
+      await handleAPI(`/feed/posts/${id}/comment`, undefined, "delete");
+      setPosts((pre)=>pre.map((p)=>{
+        if(p.id === post.id){
+          return {
+            ...p, comments: p.comments?.filter((cm)=> cm.id !== id)
+          }
+        }else{
+          return p;
+        }
+      }));
+
+    } catch (error) {
+      if(ErrorUtil.isErrorResponse(error)){
+        console.log(error.message);
+      }
+    }
+  }
+
+  const postComment = async (e: FormEvent<HTMLFormElement>)=>{
+    e.currentTarget.focus();
+    e.preventDefault();
+    if(!content.trim()){
+      return;
+    }
+
+    try {
+      const res = await handleAPI(`/feed/posts/${post.id}/comment`, {content: content}, "post");
+      setContent("");
+      
+      setPosts((pre)=>pre.map((p)=>{
+        if(p.id===post.id){
+          return {
+            ...p, comments: p.comments? [res.data.data, ...p.comments] : [res.data.data]
+          }
+        }else{
+          return p;
+        }
+      }))
+    } catch (error) {
+      if(ErrorUtil.isErrorResponse(error)){
+        console.log(error.message);
+      }
+    }
+
+    
+  }
+
+
   return (
     <div className={classes.root}>
       <div className={classes.top}>
@@ -72,6 +152,9 @@ const Post = ({ post, setPosts }: PostProps) => {
               {post.author.position + " at " + post.author.company}
             </div>
             <div className={classes.date}>
+              {
+                DateUtils.timeAgo(new Date(post.updatedDate?? post.creationDate))
+              }
               {post.updatedDate ? "Edited" : ""}
             </div>
           </div>
@@ -165,7 +248,7 @@ const Post = ({ post, setPosts }: PostProps) => {
                 style={{ marginBlock: 0 }}
               />
             </form>
-            {post.comments?.map((comment) => (
+            {post.comments?.map((comment:any) => (
               <Comment
                 editComment={editComment}
                 deleteComment={deleteComment}

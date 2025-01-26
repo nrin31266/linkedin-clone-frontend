@@ -8,6 +8,7 @@ import Button from "../../../../components/Button/Button";
 import { ErrorUtil } from "../../../../utils/errorUtils";
 import handleAPI from "../../../../configs/handleAPI";
 import Post from "../../components/Post/Post";
+import { CommentModel } from "../../components/Comment/Comment";
 
 export interface PostModel {
   id: number;
@@ -15,7 +16,7 @@ export interface PostModel {
   author: User;
   picture?: string;
   likes?: User[];
-  comments?: Comment[];
+  comments?: CommentModel[];
   creationDate: string;
   updatedDate?: string;
 }

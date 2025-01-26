@@ -64,7 +64,7 @@ const Profile = ({
                 View Profile
               </Button>
               <Link to={"/sittings"}>Sitting & Privacy</Link>
-              <Link to={"/logout"}>Logout</Link>
+              <Link to={"/login"} onClick={logout}>Logout</Link>
             </div>
           </div>
         </>
