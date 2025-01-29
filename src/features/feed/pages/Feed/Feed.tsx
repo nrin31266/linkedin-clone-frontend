@@ -9,6 +9,7 @@ import { ErrorUtil } from "../../../../utils/errorUtils";
 import handleAPI from "../../../../configs/handleAPI";
 import Post from "../../components/Post/Post";
 import { CommentModel } from "../../components/Comment/Comment";
+import Modal from "../../components/Modal/Modal";
 
 export interface PostModel {
   id: number;
@@ -47,6 +48,14 @@ const Feed = () => {
     fetchPosts();
   }, [feedContent]);
 
+
+  const handlePost = async (content: string, picture: string)=>{
+    const res = await handleAPI("/feed/posts", {
+      content: content, picture: picture || null
+    }, "post");
+    setPosts((pre)=> [res.data.data, ...pre]);
+  }
+
   return (
     <div className={classes.root}>
       <div className={classes.left}>
@@ -68,12 +77,12 @@ const Feed = () => {
           <Button variant="outline" onClick={() => setShowPostingModal(true)}>
             Start a post
           </Button>
-          {/* <Madal
+          <Modal
             title="Creating a post"
             onSubmit={handlePost}
             showModal={showPostingModal}
             setShowModal={setShowPostingModal}
-          /> */}
+          />
         </div>
         {error && <div className={classes.error}>{error}</div>}
         <div className={classes.header}>
