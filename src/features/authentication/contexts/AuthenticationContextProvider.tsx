@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import handleAPI from "../../../configs/handleAPI";
 import { API } from "../../../configs/appConfig";
@@ -9,13 +9,13 @@ export interface User {
   id: string;
   email: string;
   emailVerified: boolean;
-  firstName?: string
-  lastName?: string
-  company?: string
-  position?: string
-  location?: string
-  profileComplete: boolean
-  profilePicture?: string
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  position?: string;
+  location?: string;
+  profileComplete: boolean;
+  profilePicture?: string;
 }
 
 interface AuthenticationContextType {
@@ -23,6 +23,7 @@ interface AuthenticationContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  setUser: Dispatch<SetStateAction<User | null>>;
 }
 
 const AuthenticationContext = createContext<AuthenticationContextType | null>(
@@ -82,17 +83,39 @@ const AuthenticationContextProvider = () => {
 
   if (isLoading) {
     return <Loader />;
-  } else if (!isLoading && !user && !isOnAuthPage) {
+  }
+  if (!isLoading && !user && !isOnAuthPage) {
     return <Navigate to={"/authentication/login"} />;
-  } else if (user && user.emailVerified && isOnAuthPage) {
+  }
+
+  if (user && !user.emailVerified && !isOnAuthPage) {
+    return <Navigate to="/authentication/verify-email" />;
+  }
+
+  if (
+    user &&
+    user.emailVerified &&
+    !user.profileComplete &&
+    !location.pathname.includes("/authentication/profile")
+  ) {
+    return <Navigate to={`/authentication/profile/${user.id}`} />;
+  }
+
+  if (
+    user &&
+    user.emailVerified &&
+    user.profileComplete &&
+    location.pathname.includes("/authentication/profile")
+  ) {
+    return <Navigate to={"/"} />;
+  }
+
+  if (user && isOnAuthPage) {
     return <Navigate to={"/"} />;
   }
 
   return (
-    <AuthenticationContext.Provider value={{ user, login, logout, register }}>
-      {user && !user.emailVerified && (
-        <Navigate to={"/authentication/verify-email"} />
-      )}
+    <AuthenticationContext.Provider value={{ user, login, logout, register, setUser }}>
       <Outlet />
     </AuthenticationContext.Provider>
   );

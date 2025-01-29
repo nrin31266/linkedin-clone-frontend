@@ -10,6 +10,7 @@ import AuthenticationContextProvider from "./features/authentication/contexts/Au
 import AuthenticationLayout from "./components/AuthenticationLayout/AuthenticationLayout";
 import ApplicationLayout from "./components/ApplicationLayout/ApplicationLayout";
 import Feed from "./features/feed/pages/Feed/Feed";
+import Profile from "./features/authentication/pages/Profile/Profile";
 
 const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
           {
             path: "verify-email",
             element: <VerifyEmail />,
+          },
+          {
+            path: "profile/:id",
+            element: <Profile />,
           },
         ],
       },
