@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Box from "../../../../components/Box/Box";
 import Input from "../../../../components/Input/Input";
 
@@ -9,12 +9,18 @@ import { API } from "../../../../configs/appConfig";
 
 import { useNavigate } from "react-router-dom";
 import { ErrorUtil } from "../../../../utils/errorUtils";
+import { useAuthentication } from "../../contexts/AuthenticationContextProvider";
 
 const VerifyEmail = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, setUser } = useAuthentication();
+  useEffect(() => {
+    console.log("VerifyEmail component mounted!");
+  }, []);
+ 
 
   const sendEmailVerificationToken = async () => {
     setErrorMessage("");
@@ -36,6 +42,7 @@ const VerifyEmail = () => {
     setErrorMessage("");
     try {
       await handleAPI(`${API.VALIDATE_EMAIL}?token=${code}`, undefined, "put");
+      setUser({ ...user!, emailVerified: true });
       navigate("/");
     } catch (error: unknown) {
       if (ErrorUtil.isErrorResponse(error)) {

@@ -73,23 +73,37 @@ const AuthenticationContextProvider = () => {
       setIsLoading(false);
     }
   };
-
+  
   useEffect(() => {
     if (user) {
       return;
     }
     fetchUser();
   }, [user, location.pathname]);
+  useEffect(() => {
+    console.log("🔄 user state changed:", user);
+  }, [user]);
+  
+  useEffect(() => {
+    console.log("📌 Current pathname:", location.pathname);
+  }, [location.pathname]);
+  
 
   if (isLoading) {
     return <Loader />;
   }
+
   if (!isLoading && !user && !isOnAuthPage) {
-    return <Navigate to={"/authentication/login"} />;
+    return <Navigate to="/authentication/login" state={{ from: location.pathname }} />;
   }
 
-  if (user && !user.emailVerified && !isOnAuthPage) {
+  if (user && !user.emailVerified && location.pathname !== "/authentication/verify-email") {
     return <Navigate to="/authentication/verify-email" />;
+  }
+
+  if (user && user.emailVerified && location.pathname == "/authentication/verify-email") {
+    console.log("here1");
+    return <Navigate to="/" />;
   }
 
   if (
@@ -107,13 +121,15 @@ const AuthenticationContextProvider = () => {
     user.profileComplete &&
     location.pathname.includes("/authentication/profile")
   ) {
-    return <Navigate to={"/"} />;
+    console.log("here2");
+    return <Navigate to="/" />;
   }
 
   if (user && isOnAuthPage) {
-    return <Navigate to={"/"} />;
+    return <Navigate to={location.state?.from || "/"} />;
   }
-
+  
+  
   return (
     <AuthenticationContext.Provider value={{ user, login, logout, register, setUser }}>
       <Outlet />

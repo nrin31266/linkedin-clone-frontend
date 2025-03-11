@@ -14,12 +14,13 @@ const Profile = () => {
   const { user, setUser } = useAuthentication();
   const [error, setError] = useState("");
   const [data, setData] = useState({
-    firstName: "",
-    lastName: "",
-    company: "",
-    position: "",
-    location: "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    company: user?.company || "",
+    position: user?.position || "",
+    location: user?.location || "",
   });
+
 
   const onSubmit = async () => {
     if (!data.firstName || !data.lastName) {
@@ -41,12 +42,11 @@ const Profile = () => {
         "put"
       );
       setUser(res.data.data);
+      navigate("/");
     } catch (error) {
       if (ErrorUtil.isErrorResponse(error)) {
         setError(error.message);
       }
-    } finally {
-      navigate("/");
     }
   };
   return (
