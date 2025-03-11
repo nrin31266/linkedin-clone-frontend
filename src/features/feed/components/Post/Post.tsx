@@ -11,17 +11,27 @@ import {
   User,
 } from "../../../authentication/contexts/AuthenticationContextProvider";
 import { data, useNavigate } from "react-router-dom";
-import { PostModel } from "../../pages/Feed/Feed";
+
 import handleAPI from "../../../../configs/handleAPI";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+
 import Input from "../../../../components/Input/Input";
-import { DateUtils } from "../../../../utils/dateUtils";
-import Comment from "../Comment/Comment";
+
+import Comment, { CommentModel } from "../Comment/Comment";
 import Modal from "../Modal/Modal";
+import TimeAgo from "../../../../components/TimeAgo/TimeAgo";
+export interface Post {
+  id: number;
+  content: string;
+  author: User;
+  picture?: string;
+
+  creationDate: string;
+  updatedDate?: string;
+}
 
 interface PostProps {
-  post: PostModel;
-  setPosts: Dispatch<SetStateAction<PostModel[]>>;
+  post: Post;
+  setPosts: Dispatch<SetStateAction<Post[]>>;
 }
 
 const Post = ({ post, setPosts }: PostProps) => {
@@ -31,144 +41,132 @@ const Post = ({ post, setPosts }: PostProps) => {
   const [content, setContent] = useState("");
   const [showMenu, setShowMenu] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [postLiked, setPostLiked] = useState<boolean>(
-    !!post.likes?.some((like) => like.id === user?.id)
-  );
+  const [comments, setComments] = useState<CommentModel[]>([]);
+  const [likes, setLikes] = useState<User[]>([]);
+  const [postLiked, setPostLiked] = useState<boolean | undefined>(undefined);
+
   useEffect(() => {
-    setPostLiked(!!post.likes?.some((like) => like.id === user?.id));
-  }, [post.likes, user?.id]);
-
-  const deletePost = async (id: number) => {
-    try {
-      // await handleAPI("", undefined, "delete");
-      setPosts((pre) => pre.filter((item) => item.id != id));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const like = async () => {
-    setPostLiked((pre) => !pre);
-    try {
-      await handleAPI(`/feed/posts/${post.id}/like`, undefined, "put");
-    } catch (error) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        setPostLiked((pre) => !pre);
-      }
-    }
-  };
-
-  const editComment = async (id: number, updateContent: string) => {
-    try {
-      await handleAPI(
-        `/feed/posts/${id}/comment`,
-        { content: updateContent },
-        "put"
-      );
-      setPosts((pre) =>
-        pre.map((p) => {
-          if (p.id === post.id) {
-            return {
-              ...p,
-              comments: p.comments?.map((cm) => {
-                if (cm.id === id) {
-                  return {
-                    ...cm,
-                    updatedDate: new Date().toISOString(),
-                    content: updateContent,
-                  };
-                } else {
-                  return cm;
-                }
-              }),
-            };
-          } else {
-            return p;
-          }
-        })
-      );
-    } catch (error) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        console.log(error.message);
-      }
-    }
-  };
-
-  const deleteComment = async (id: number) => {
-    try {
-      await handleAPI(`/feed/posts/${id}/comment`, undefined, "delete");
-      setPosts((pre) =>
-        pre.map((p) => {
-          if (p.id === post.id) {
-            return {
-              ...p,
-              comments: p.comments?.filter((cm) => cm.id !== id),
-            };
-          } else {
-            return p;
-          }
-        })
-      );
-    } catch (error) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        console.log(error.message);
-      }
-    }
-  };
-
-  const postComment = async (e: FormEvent<HTMLFormElement>) => {
-    e.currentTarget.focus();
-    e.preventDefault();
-    if (!content.trim()) {
-      return;
-    }
-
-    try {
-      const res = await handleAPI(
-        `/feed/posts/${post.id}/comment`,
-        { content: content },
-        "post"
-      );
-      setContent("");
-
-      setPosts((pre) =>
-        pre.map((p) => {
-          if (p.id === post.id) {
-            return {
-              ...p,
-              comments: p.comments
-                ? [res.data.data, ...p.comments]
-                : [res.data.data],
-            };
-          } else {
-            return p;
-          }
-        })
-      );
-    } catch (error) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        console.log(error.message);
-      }
-    }
-  };
-
-  const editPost = async (content: string, picture: string) => {
-    const res = await handleAPI(
-      `/feed/posts/${post.id}`,
-      { content: content, picture: picture },
-      "put"
-    );
-
-    setPosts((pre) =>
-      pre.map((p) => {
-        if (p.id === post.id) {
-          return res.data.data;
-        } else {
-          return p;
+    const fetchPostLikes = async () => {
+      await handleAPI<User[]>({
+        endpoint: `/feed/posts/${post.id}/likes`,
+        method: "get",
+        onSuccess: (data) => {
+          setLikes(data);
+          setPostLiked(!!data.some((like) => like.id === user?.id));
+        },
+        onFailure: (error) => {
+          console.log("Error fetching likes:", error);
         }
-      })
-    );
+      });
+    };
+  
+    fetchPostLikes();
+  }, [post.id, user?.id]);
+  
+  useEffect(() => {
+    const fetchComments = async () => {
+      await handleAPI<CommentModel[]>({
+        endpoint: `/feed/posts/${post.id}/comments`,
+        method: "get",
+        onSuccess: (data) => {
+          setComments(data);
+        },
+        onFailure: (error) => console.log("Error fetching comments:", error)
+      });
+    };
+  
+    fetchComments();
+  }, [post.id]);
+  
+  const deletePost = async (id: number) => {
+    await handleAPI({
+      endpoint: `/feed/posts/${id}`,
+      method: "delete",
+      onSuccess: () => {
+        setPosts((prev) => prev.filter((item) => item.id !== id));
+      },
+      onFailure: (error) => console.log("Error deleting post:", error)
+    });
   };
+  
+  const like = async () => {
+    const prevLiked = postLiked;
+    
+    setPostLiked(!prevLiked);
+    setLikes((prev) =>
+      prevLiked ? prev.filter((like) => like.id !== user?.id) : [...prev, user!]
+    );
+  
+    await handleAPI({
+      endpoint: `/feed/posts/${post.id}/like`,
+      method: "put",
+      onFailure: (error) => {
+        console.log("Error liking post:", error);
+        
+        // Hoàn tác nếu API lỗi
+        setPostLiked(prevLiked);
+        setLikes((prev) =>
+          prevLiked ? [...prev, user!] : prev.filter((like) => like.id !== user?.id)
+        );
+      }
+    });
+  };
+  
+  const editComment = async (id: number, updateContent: string) => {
+    await handleAPI({
+      endpoint: `/feed/posts/${id}/comment`,
+      body: { content: updateContent },
+      method: "put",
+      onSuccess: () => {
+        setComments((prev) =>
+          prev.map((cm) => (cm.id === id ? { ...cm, content: updateContent } : cm))
+        );
+      },
+      onFailure: (error) => console.log("Error editing comment:", error)
+    });
+  };
+  
+  const deleteComment = async (id: number) => {
+    await handleAPI({
+      endpoint: `/feed/posts/${id}/comment`,
+      method: "delete",
+      onSuccess: () => {
+        setComments((prev) => prev.filter((cm) => cm.id !== id));
+      },
+      onFailure: (error) => console.log("Error deleting comment:", error)
+    });
+  };
+  
+  const postComment = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+  
+    await handleAPI<CommentModel>({
+      endpoint: `/feed/posts/${post.id}/comment`,
+      body: { content },
+      method: "post",
+      onSuccess: (data) => {
+        setContent("");
+        setComments((prev) => [data, ...prev]);
+      },
+      onFailure: (error) => console.log("Error posting comment:", error)
+    });
+  };
+  
+  const editPost = async (content: string, picture: string) => {
+    await handleAPI<Post>({
+      endpoint: `/feed/posts/${post.id}`,
+      body: { content, picture },
+      method: "put",
+      onSuccess: (data) => {
+        setPosts((prev) =>
+          prev.map((p) => (p.id === post.id ? data : p))
+        );
+      },
+      onFailure: (error) => console.log("Error editing post:", error)
+    });
+  };
+  
 
   return (
     <>
@@ -204,12 +202,7 @@ const Post = ({ post, setPosts }: PostProps) => {
               <div className={classes.title}>
                 {post.author.position + " at " + post.author.company}
               </div>
-              <div className={classes.date}>
-                {DateUtils.timeAgo(
-                  new Date(post.updatedDate ?? post.creationDate)
-                )}
-                {post.updatedDate ? "Edited" : ""}
-              </div>
+              <TimeAgo date={post.updatedDate ?? post.creationDate} isUpdate={post.updatedDate ? true: false}/>
             </div>
           </div>
           <div>
@@ -236,20 +229,17 @@ const Post = ({ post, setPosts }: PostProps) => {
         <div className={classes.content}>{post.content}</div>
         {post.picture && <img src={post.picture} className={classes.picture} />}
         <div className={classes.stats}>
-          {post.likes && post.likes.length > 0 ? (
+          {likes && likes.length > 0 ? (
             <div className={classes.stat}>
               <span>
                 {postLiked
                   ? "You "
-                  : post.likes[0].firstName +
-                    " " +
-                    post.likes[0].lastName +
-                    " "}
+                  : likes[0].firstName + " " + likes[0].lastName + " "}
               </span>
-              {post.likes.length - 1 > 0 ? (
+              {likes.length - 1 > 0 ? (
                 <span>
-                  and {post.likes.length - 1}{" "}
-                  {post.likes.length - 1 === 1 ? "other" : "others"}
+                  and {likes.length - 1}{" "}
+                  {likes.length - 1 === 1 ? "other" : "others"}
                 </span>
               ) : null}{" "}
               liked this
@@ -257,12 +247,12 @@ const Post = ({ post, setPosts }: PostProps) => {
           ) : (
             <div></div>
           )}
-          {post.comments && post.comments.length > 0 ? (
+          {comments && comments.length > 0 ? (
             <button
               className={classes.stat}
               onClick={() => setShowComments((prev) => !prev)}
             >
-              <span>{post.comments.length} comments</span>
+              <span>{comments.length} comments</span>
             </button>
           ) : (
             <div></div>
@@ -274,6 +264,7 @@ const Post = ({ post, setPosts }: PostProps) => {
               like();
             }}
             className={postLiked ? classes.active : ""}
+            disabled={postLiked === undefined}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -311,7 +302,7 @@ const Post = ({ post, setPosts }: PostProps) => {
                 style={{ marginBlock: 0 }}
               />
             </form>
-            {post.comments?.map((comment: any) => (
+            {comments?.map((comment: any) => (
               <Comment
                 editComment={editComment}
                 deleteComment={deleteComment}

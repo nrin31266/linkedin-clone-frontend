@@ -7,7 +7,7 @@ import classes from "./ResetPassword.module.scss";
 import { FormEvent, useState } from "react";
 import handleAPI from "../../../../configs/handleAPI";
 import { API } from "../../../../configs/appConfig";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -17,42 +17,48 @@ const ResetPassword = () => {
 
   const sendResetPasswordToken = async (email: string) => {
     setErrorMessage("");
-    try {
-      await handleAPI(
-        `${API.RESET_PASSWORD_TOKEN}?email=${email}`,
-        undefined,
-        "put"
-      );
-      setSentToEmail(email);
-    } catch (error: unknown) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        setErrorMessage(error.message);
+  
+    await handleAPI<void>({
+      endpoint: `${API.RESET_PASSWORD_TOKEN}?email=${email}`,
+      method: "put",
+      onSuccess: () => {
+        setSentToEmail(email);
+      },
+      onFailure: (error) => {
+        setErrorMessage(error);
       }
-    }
+    });
   };
+  
 
   const doResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
+  
     const formData = new FormData(e.currentTarget);
     const request = {
       token: formData.get("token"),
       newPassword: formData.get("newPassword"),
       email: sentToEmail,
     };
-
-    try {
-      await handleAPI(API.RESET_PASSWORD, request, "put");
-      navigate("/authentication/login");
-    } catch (error: unknown) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        setErrorMessage(error.message);
+  
+    await handleAPI<void>({
+      endpoint: API.RESET_PASSWORD,
+      body: request,
+      method: "put",
+      onSuccess: () => {
+        navigate("/authentication/login");
+      },
+      onFailure: (error) => {
+        setErrorMessage(error);
+      },
+      onFinally: () => {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
+  
 
   return (
     <>

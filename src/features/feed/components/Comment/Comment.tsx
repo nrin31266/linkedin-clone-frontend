@@ -4,6 +4,7 @@ import classes from './Comment.module.scss';
 import { useEffect, useRef, useState } from 'react';
 import Input from '../../../../components/Input/Input';
 import { DateUtils } from '../../../../utils/dateUtils';
+import TimeAgo from '../../../../components/TimeAgo/TimeAgo';
 
 export interface CommentModel {
   id: number;
@@ -51,10 +52,7 @@ const Comment = ({ comment, deleteComment, editComment }: CommentProps) => {
                 <div className={classes.title}>
                   {comment.author.position + " at " + comment.author.company}
                 </div>
-                <div className={classes.date}>
-                  {DateUtils.timeAgo(new Date(comment.updatedDate || comment.creationDate))}
-                  {comment.updatedDate ? " . Edited " : ""}
-                </div>
+                <TimeAgo date={comment.updatedDate?? comment.creationDate} isUpdate={comment.updatedDate? true:false}/>
               </div>
             </button>
             {comment.author.id == user?.id && (

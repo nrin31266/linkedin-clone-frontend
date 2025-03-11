@@ -5,13 +5,13 @@ import classes from "./Feed.module.scss";
 import { useNavigate } from "react-router-dom";
 import { useAuthentication, User } from "../../../authentication/contexts/AuthenticationContextProvider";
 import Button from "../../../../components/Button/Button";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+
 import handleAPI from "../../../../configs/handleAPI";
 import Post from "../../components/Post/Post";
 import { CommentModel } from "../../components/Comment/Comment";
 import Modal from "../../components/Modal/Modal";
 
-export interface PostModel {
+interface Post {
   id: number;
   content: string;
   author: User;
@@ -26,35 +26,43 @@ const Feed = () => {
   const { user } = useAuthentication();
   const navigate = useNavigate();
   const [showPostingModal, setShowPostingModal] = useState(false);
-  const [posts, setPosts] = useState<PostModel[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState("");
   const [feedContent, setFeedContent] = useState<"all" | "connexions">(
     "all"
   );
 
   useEffect(() => {
-    const fetchPosts =async ()=>{
-      try {
-        const res = await handleAPI(`/feed${feedContent==="connexions"?"":"/posts"}`)
-        setPosts(res.data.data)
-      } catch (error) {
-        if(ErrorUtil.isErrorResponse(error)){
-          setError(error.message);
+    const fetchPosts = async () => {
+      await handleAPI<Post[]>({
+        endpoint: `/feed${feedContent === "connexions" ? "" : "/posts"}`,
+        method: "get",
+        onSuccess: (data) => {
+          setPosts(data);
+        },
+        onFailure: (error) => {
+          setError(error);
         }
-      }
-    }
-
-
+      });
+    };
+  
     fetchPosts();
   }, [feedContent]);
-
-
-  const handlePost = async (content: string, picture: string)=>{
-    const res = await handleAPI("/feed/posts", {
-      content: content, picture: picture || null
-    }, "post");
-    setPosts((pre)=> [res.data.data, ...pre]);
-  }
+  
+  const handlePost = async (content: string, picture: string) => {
+    await handleAPI<Post>({
+      endpoint: "/feed/posts",
+      body: { content, picture: picture || null },
+      method: "post",
+      onSuccess: (data) => {
+        setPosts((prev) => [...prev, data]);
+      },
+      onFailure: (error) => {
+        console.error("Failed to post:", error);
+      }
+    });
+  };
+  
 
   return (
     <div className={classes.root}>

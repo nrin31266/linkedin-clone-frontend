@@ -125,6 +125,10 @@
             &.active {
                 color: var(--primary-color);
             }
+
+            &[disabled]{
+                cursor: wait;
+            }
         }
     }
 

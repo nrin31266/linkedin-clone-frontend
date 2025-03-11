@@ -5,8 +5,8 @@ export interface ApiResponse<T = any> {
 }
 
 export interface ErrorResponse {
-  status: number;
+  status?: number;
   code: number;
   message: string;
-  details?: string | null;
+  details?: string;
 }

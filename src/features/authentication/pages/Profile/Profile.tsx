@@ -1,11 +1,11 @@
 import { useState } from "react";
 import classes from "./Profile.module.scss";
-import { useAuthentication } from "../../contexts/AuthenticationContextProvider";
+import { useAuthentication, User } from "../../contexts/AuthenticationContextProvider";
 import Box from "../../../../components/Box/Box";
 import Input from "../../../../components/Input/Input";
 import Button from "../../../../components/Button/Button";
 import { useNavigate } from "react-router-dom";
-import { ErrorUtil } from "./../../../../utils/errorUtils";
+
 import handleAPI from "../../../../configs/handleAPI";
 
 const Profile = () => {
@@ -35,20 +35,21 @@ const Profile = () => {
       setError("Please fill in your location.");
       return;
     }
-    try {
-      const res = await handleAPI(
-        `/authentication/profile/${user?.id}`,
-        data,
-        "put"
-      );
-      setUser(res.data.data);
-      navigate("/");
-    } catch (error) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        setError(error.message);
+  
+    await handleAPI<User>({
+      endpoint: `/authentication/profile/${user?.id}`,
+      body: data,
+      method: "put",
+      onSuccess: (updatedUser) => {
+        setUser(updatedUser);
+        navigate("/");
+      },
+      onFailure: (error) => {
+        setError(error);
       }
-    }
+    });
   };
+  
   return (
     <div className={classes.root}>
       <Box>

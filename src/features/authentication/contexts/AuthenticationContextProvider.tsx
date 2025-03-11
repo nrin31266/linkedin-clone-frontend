@@ -3,7 +3,8 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import handleAPI from "../../../configs/handleAPI";
 import { API } from "../../../configs/appConfig";
 import Loader from "../../../components/Loader/Loader";
-import { ErrorUtil } from "../../../utils/errorUtils";
+
+import request from "../../../configs/handleAPI";
 
 export interface User {
   id: string;
@@ -44,37 +45,64 @@ const AuthenticationContextProvider = () => {
     location.pathname === "/authentication/register" ||
     location.pathname === "/authentication/request-password-reset";
 
+
   const login = async (email: string, password: string) => {
-    const res = await handleAPI(API.LOGIN, { email, password }, "post");
-    localStorage.setItem("token", res.data.data.token);
+    await handleAPI<{ token: string }>({
+      endpoint: API.LOGIN,
+      body: { email, password },
+      method: "post",
+      onSuccess: (data) => {
+        localStorage.setItem("token", data.token);
+      },
+      onFailure: (error) => {
+        console.error("Login failed:", error);
+        throw new Error(error);
+      }
+    });
   };
+  
+  const register = async (email: string, password: string) => {
+    await handleAPI<{ token: string }>({
+      endpoint: API.REGISTER,
+      body: { email, password },
+      method: "post",
+      onSuccess: (data) => {
+        localStorage.setItem("token", data.token);
+      },
+      onFailure: (error) => {
+        console.error("Registration failed:", error);
+        throw new Error(error);
+      }
+    });
+  };
+  
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
   };
 
-  const register = async (email: string, password: string) => {
-    const res = await handleAPI(API.REGISTER, { email, password }, "post");
-    localStorage.setItem("token", res.data.data.token);
-  };
 
-  const fetchUser = async () => {
-    try {
-      if (!isOnAuthPage) {
-        const res = await handleAPI(API.FETCH_USER);
-        setUser(res.data.data);
-      }
-    } catch (error: unknown) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        console.error(`Error Code: ${error.code}, Message: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   useEffect(() => {
+    const fetchUser = async () => {
+
+      setIsLoading(true);
+      await request<User>({
+        endpoint: API.FETCH_USER,
+        method: "get",
+        onSuccess: (data) => {
+          setUser(data);
+        },
+        onFailure: (error) => {
+          console.log(error)
+        },
+        onFinally: () => {
+          setIsLoading(false);
+        }
+      })
+    };
+
     if (user) {
       return;
     }

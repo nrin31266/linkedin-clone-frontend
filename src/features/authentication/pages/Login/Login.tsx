@@ -7,7 +7,7 @@ import Input from "../../../../components/Input/Input";
 
 import classes from "./Login.module.scss";
 import { useAuthentication } from "../../contexts/AuthenticationContextProvider";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+
 
 const Login = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -29,8 +29,8 @@ const Login = () => {
       await login(email, password);
       const destination = location.state?.from || "/";
       navigate(destination);
-    } catch (error: unknown) {
-      if (ErrorUtil.isErrorResponse(error)) {
+    } catch (error) {
+      if (error instanceof Error) {
         setErrorMessage(error.message);
       }
     } finally {

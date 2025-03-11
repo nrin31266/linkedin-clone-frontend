@@ -2,7 +2,7 @@ import classes from "./AuthenticationLayout.module.scss";
 import { Outlet } from "react-router-dom";
 
 const AuthenticationLayout = () => {
-    console.log("AuthenticationLayout rendered!");
+
   return (
     <div className={classes.root}>
       <header className={classes.container}>

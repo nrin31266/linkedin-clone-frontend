@@ -6,7 +6,7 @@ import Input from "../../../../components/Input/Input";
 import classes from "./Register.module.scss";
 import { FormEvent, useState } from "react";
 import { useAuthentication } from "../../contexts/AuthenticationContextProvider";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+
 
 
 const Register = () => {
@@ -22,13 +22,11 @@ const Register = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-
-
     try {
       await register(email, password);
       navigate("/");
-    } catch (error: unknown) {
-      if(ErrorUtil.isErrorResponse(error)){
+    } catch (error) {
+      if(error instanceof Error){
         setErrorMessage(error.message)
       }
     }finally{

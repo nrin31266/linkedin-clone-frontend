@@ -8,7 +8,7 @@ import handleAPI from "../../../../configs/handleAPI";
 import { API } from "../../../../configs/appConfig";
 
 import { useNavigate } from "react-router-dom";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+
 import { useAuthentication } from "../../contexts/AuthenticationContextProvider";
 
 const VerifyEmail = () => {
@@ -25,31 +25,39 @@ const VerifyEmail = () => {
   const sendEmailVerificationToken = async () => {
     setErrorMessage("");
     setIsLoading(true);
-    try {
-      await handleAPI(API.SEND_EMAIL_VERIFICATION_TOKEN, undefined, "put");
-      setMessage("Code sent successfully. Please check your email.");
-    } catch (error: unknown) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        setErrorMessage(error.message);
+  
+    await handleAPI<void>({
+      endpoint: API.SEND_EMAIL_VERIFICATION_TOKEN,
+      method: "put",
+      onSuccess: () => {
+        setMessage("Code sent successfully. Please check your email.");
+      },
+      onFailure: (error) => {
+        setErrorMessage(error);
+      },
+      onFinally: () => {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
-
+  
   const validateEmail = async (code: string) => {
     setMessage("");
     setErrorMessage("");
-    try {
-      await handleAPI(`${API.VALIDATE_EMAIL}?token=${code}`, undefined, "put");
-      setUser({ ...user!, emailVerified: true });
-      navigate("/");
-    } catch (error: unknown) {
-      if (ErrorUtil.isErrorResponse(error)) {
-        setErrorMessage(error.message);
+  
+    await handleAPI<void>({
+      endpoint: `${API.VALIDATE_EMAIL}?token=${code}`,
+      method: "put",
+      onSuccess: () => {
+        setUser({ ...user!, emailVerified: true });
+        navigate("/");
+      },
+      onFailure: (error) => {
+        setErrorMessage(error);
       }
-    }
+    });
   };
+  
 
   return (
     <>

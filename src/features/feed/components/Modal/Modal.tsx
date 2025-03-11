@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import classes from "./Modal.module.scss";
 import Button from "../../../../components/Button/Button";
 import Input from "../../../../components/Input/Input";
-import { ErrorUtil } from "../../../../utils/errorUtils";
+import handleAPI from "../../../../configs/handleAPI";
 
 interface Props {
   showModal: boolean;
@@ -39,6 +39,8 @@ const Modal = ({
           onSubmit={async (e) => {
             e.preventDefault();
             setIsLoading(true);
+            setError("");
+
             const content = e.currentTarget.content.value;
             const picture = e.currentTarget.picture.value;
 
@@ -48,16 +50,20 @@ const Modal = ({
               return;
             }
 
-            try {
-              await onSubmit(content, picture);
-              setShowModal(false);
-            } catch (error) {
-              if(ErrorUtil.isErrorResponse(error)){
-                setError(error.message);
-              }
-            } finally {
-              setIsLoading(false);
-            }
+            await handleAPI<void>({
+              endpoint: "/feed/posts",
+              body: { content, picture: picture || null },
+              method: "post",
+              onSuccess: () => {
+                setShowModal(false);
+              },
+              onFailure: (error) => {
+                setError(error);
+              },
+              onFinally: () => {
+                setIsLoading(false);
+              },
+            });
           }}
         >
           <div className={classes.body}>
