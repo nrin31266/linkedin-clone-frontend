@@ -10,6 +10,7 @@ interface RequestParams<T, B = unknown> {
   onFailure?: (error: string) => void;
   onFinally?: () => void;
   isAuthenticated?: boolean;
+  params?: string | Record<string, string>;
 }
 
 
@@ -21,7 +22,8 @@ const handleAPI = async <T, B = unknown>({
   onFailure,
   onSuccess,
   onFinally,
-  isAuthenticated = true
+  isAuthenticated = true,
+  params
 }: RequestParams<T, B>): Promise<void> => {
   try {
     const headers: Record<string, string> = {
@@ -41,7 +43,8 @@ const handleAPI = async <T, B = unknown>({
       data: body,
       headers,
       baseURL: API_BASE_URL,
-      timeout: 5000
+      timeout: 5000,
+      params
     });
 
     onSuccess?.(res.data.data);

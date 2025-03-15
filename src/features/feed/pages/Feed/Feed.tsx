@@ -78,7 +78,7 @@ const Feed = () => {
           >
             <img
               className={`${classes.top} ${classes.avatar}`}
-              src={user?.profilePicture || "/avatar.png"}
+              src={user?.profilePicture || "/avatar.jpg"}
               alt=""
             />
           </button>

@@ -28,7 +28,7 @@ const Profile = ({
       >
         <img
           className={`${classes.avatar} ${classes.top}`}
-          src={user?.profilePicture || "avatar.svg"}
+          src={user?.profilePicture || "avatar.jpg"}
           alt=""
         />
         <div className={classes.name}>
@@ -42,7 +42,7 @@ const Profile = ({
             <div className={classes.content}>
               <img
                 className={`${classes.right} ${classes.avatar}`}
-                src={user?.profilePicture || "/avatar.svg"}
+                src={user?.profilePicture || "/avatar.jpg"}
               />
               <div className={classes.left}>
                 <div className={classes.name}>

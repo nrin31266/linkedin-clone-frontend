@@ -190,7 +190,7 @@ const Post = ({ post, setPosts }: PostProps) => {
               }}
             >
               <img
-                src={post.author.profilePicture || "/avatar.svg"}
+                src={post.author.profilePicture || "/avatar.jpg"}
                 alt=""
                 className={classes.avatar}
               />

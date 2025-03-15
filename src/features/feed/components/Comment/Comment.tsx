@@ -42,7 +42,7 @@ const Comment = ({ comment, deleteComment, editComment }: CommentProps) => {
             >
               <img
                 className={classes.avatar}
-                src={comment.author.profilePicture || "/avatar.png"}
+                src={comment.author.profilePicture || "/avatar.jpg"}
                 alt=""
               />
               <div>
