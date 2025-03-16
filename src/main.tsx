@@ -12,6 +12,8 @@ import ApplicationLayout from "./components/ApplicationLayout/ApplicationLayout"
 import Feed from "./features/feed/pages/Feed/Feed";
 import Profile from "./features/authentication/pages/Profile/Profile";
 import VerifyEmail from "./features/authentication/pages/VerifyEmail/VerifyEmail";
+import Notifications from "./features/feed/pages/Notifications/Notifications";
+import { PostPage } from "./features/feed/pages/Feed/Feed";
 
 const router = createBrowserRouter([
   {
@@ -26,16 +28,20 @@ const router = createBrowserRouter([
             element: <Feed />,
           },
           {
+            element: <PostPage />,
+            path: "posts/:id",
+          },
+          {
             element: "network",
-            path: "network"
+            path: "network",
           },
           {
             element: "message",
-            path: "messaging"
+            path: "messaging",
           },
           {
-            element: "notification",
-            path: "notifications"
+            element: <Notifications />,
+            path: "notifications",
           },
         ],
       },

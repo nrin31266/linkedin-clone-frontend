@@ -4,7 +4,7 @@ import classes from "./TimeAgo.module.scss";
 
 interface Props {
   date: string;
-  isUpdate: boolean;
+  isUpdate?: boolean;
 }
 const TimeAgo = ({ date, isUpdate }: Props) => {
 

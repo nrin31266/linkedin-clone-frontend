@@ -4,6 +4,9 @@ import Input from "../Input/Input";
 import { useAuthentication } from "../../features/authentication/contexts/AuthenticationContextProvider";
 import { useEffect, useState } from "react";
 import Profile from "./components/Profile";
+import { useWebSocket } from "../../features/ws/Ws";
+import { Notification } from './../../features/feed/pages/Notifications/Notifications';
+import handleAPI from "../../configs/handleAPI";
 
 const HeaderComponent = () => {
   const { user } = useAuthentication();
@@ -12,20 +15,58 @@ const HeaderComponent = () => {
   const [showNavigationMenu, setShowNavigationMenu] = useState(
     window.innerWidth > 1080 ? true : false
   );
+  const webSocketClient = useWebSocket();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const nonReadNotificationCount = notifications.filter((n) => !n.isRead).length;
+
+  useEffect(() => {
+    const subscribe = webSocketClient?.subscribe(`/topic/users/${user?.id}/notifications`, (message)=>{
+      const notification = JSON.parse(message.body)
+      setNotifications((pre)=>{
+        const index = pre.findIndex((n) => n.id === notification.id);
+        if (index === -1) {
+          return [notification, ...pre];
+        }else{
+          return pre.map((n) => (n.id === notification.id ? notification : n));
+        }
+      })
+    } )
+      
+    return () => subscribe?.unsubscribe();
+  }, [user?.id, webSocketClient]);
+
+  useEffect(() => {
+    const fetchNotifications = async () =>{
+      await handleAPI<Notification[]>({
+        endpoint: "/notifications",
+        onSuccess: (data) => {
+
+          console.log(data)
+          setNotifications(data);
+        },
+        onFailure: (error) => console.log("Error fetching notifications:", error)
+      })
+    }
+
+    fetchNotifications();
+  }, []);
 
 
   useEffect(() => {
-    const handleResize= ()=>{
+    const handleResize = () => {
       setShowNavigationMenu(window.innerWidth >= 1080);
-    }
+    };
 
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+
   return (
-    <div className={classes.root}>
+    <div className={classes.root} 
+    >
       <div className={classes.container}>
         <div className={classes.left}>
           <NavLink to={"/"}>
@@ -130,7 +171,14 @@ const HeaderComponent = () => {
                   >
                     <path d="M22 19h-8.28a2 2 0 11-3.44 0H2v-1a4.52 4.52 0 011.17-2.83l1-1.17h15.7l1 1.17A4.42 4.42 0 0122 18zM18.21 7.44A6.27 6.27 0 0012 2a6.27 6.27 0 00-6.21 5.44L5 13h14z"></path>
                   </svg>
-                  <span>Notifications</span>
+
+                 <div>
+                  {
+                    nonReadNotificationCount > 0 ?
+                    <span className={classes.badge}>{nonReadNotificationCount}</span> : null
+                  }
+                 <span>Notifications</span>
+                 </div>
                 </NavLink>
               </li>
             </ul>

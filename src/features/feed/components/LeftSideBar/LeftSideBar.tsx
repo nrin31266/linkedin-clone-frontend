@@ -12,7 +12,7 @@ const LeftSideBar = () => {
         />
       </div>
       <div className={classes.avatar}>
-        <img src={user?.profilePicture || "/avatar.png"} alt="" />
+        <img src={user?.profilePicture || "/avatar.jpg"} alt="" />
       </div>
       <div className={classes.name}>
         {user?.firstName + " " + user?.lastName}

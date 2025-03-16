@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import LeftSideBar from "../../components/LeftSideBar/LeftSideBar";
 import RightSideBar from "../../components/RightSideBar/RightSideBar";
 import classes from "./Feed.module.scss";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuthentication, User } from "../../../authentication/contexts/AuthenticationContextProvider";
 import Button from "../../../../components/Button/Button";
 
@@ -10,6 +10,33 @@ import handleAPI from "../../../../configs/handleAPI";
 import Post from "../../components/Post/Post";
 import { CommentModel } from "../../components/Comment/Comment";
 import Modal from "../../components/Modal/Modal";
+
+export function PostPage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const { id } = useParams();
+
+  useEffect(() => {
+    handleAPI<Post>({
+      endpoint: `/feed/posts/${id}`,
+      onSuccess: (post) => setPosts([post]),
+      onFailure: (error) => console.log(error),
+    });
+  }, [id]);
+
+  return (
+    <div className={classes.root}>
+      <div className={classes.left}>
+        <LeftSideBar />
+      </div>
+      <div className={classes.center}>
+        {posts.length > 0 && <Post setPosts={setPosts} post={posts[0]} />}
+      </div>
+      <div className={classes.right}>
+        <RightSideBar />
+      </div>
+    </div>
+  );
+}
 
 interface Post {
   id: number;

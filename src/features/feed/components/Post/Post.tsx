@@ -10,7 +10,7 @@ import {
   useAuthentication,
   User,
 } from "../../../authentication/contexts/AuthenticationContextProvider";
-import { data, useNavigate } from "react-router-dom";
+import { data, useNavigate, useParams } from "react-router-dom";
 
 import handleAPI from "../../../../configs/handleAPI";
 
@@ -19,6 +19,12 @@ import Input from "../../../../components/Input/Input";
 import Comment, { CommentModel } from "../Comment/Comment";
 import Modal from "../Modal/Modal";
 import TimeAgo from "../../../../components/TimeAgo/TimeAgo";
+import { useWebSocket } from "../../../ws/Ws";
+import LeftSideBar from "../LeftSideBar/LeftSideBar";
+import RightSideBar from "../RightSideBar/RightSideBar";
+
+
+
 export interface Post {
   id: number;
   content: string;
@@ -44,6 +50,32 @@ const Post = ({ post, setPosts }: PostProps) => {
   const [comments, setComments] = useState<CommentModel[]>([]);
   const [likes, setLikes] = useState<User[]>([]);
   const [postLiked, setPostLiked] = useState<boolean | undefined>(undefined);
+  const webSocketClient = useWebSocket();
+
+  useEffect(() => {
+    const subscribe = webSocketClient?.subscribe(
+      `/topic/likes/${post.id}`,
+      (message) => {
+        const likes = JSON.parse(message.body);
+        setLikes(likes);
+        setPostLiked(likes.some((like: User) => like.id === user?.id));
+      }
+    );
+
+    return () => subscribe?.unsubscribe();
+  }, [webSocketClient, post.id, user?.id]);
+
+  useEffect(() => {
+    const subscribe = webSocketClient?.subscribe(
+      `/topic/comments/${post.id}`,
+      (message) => {
+        const newComment: CommentModel = JSON.parse(message.body);
+        setComments((prev) => [newComment, ...prev]);
+      }
+    );
+
+    return () => subscribe?.unsubscribe();
+  }, [webSocketClient, post.id]);
 
   useEffect(() => {
     const fetchPostLikes = async () => {
@@ -56,13 +88,13 @@ const Post = ({ post, setPosts }: PostProps) => {
         },
         onFailure: (error) => {
           console.log("Error fetching likes:", error);
-        }
+        },
       });
     };
-  
+
     fetchPostLikes();
   }, [post.id, user?.id]);
-  
+
   useEffect(() => {
     const fetchComments = async () => {
       await handleAPI<CommentModel[]>({
@@ -71,13 +103,13 @@ const Post = ({ post, setPosts }: PostProps) => {
         onSuccess: (data) => {
           setComments(data);
         },
-        onFailure: (error) => console.log("Error fetching comments:", error)
+        onFailure: (error) => console.log("Error fetching comments:", error),
       });
     };
-  
+
     fetchComments();
   }, [post.id]);
-  
+
   const deletePost = async (id: number) => {
     await handleAPI({
       endpoint: `/feed/posts/${id}`,
@@ -85,33 +117,20 @@ const Post = ({ post, setPosts }: PostProps) => {
       onSuccess: () => {
         setPosts((prev) => prev.filter((item) => item.id !== id));
       },
-      onFailure: (error) => console.log("Error deleting post:", error)
+      onFailure: (error) => console.log("Error deleting post:", error),
     });
   };
-  
+
   const like = async () => {
-    const prevLiked = postLiked;
-    
-    setPostLiked(!prevLiked);
-    setLikes((prev) =>
-      prevLiked ? prev.filter((like) => like.id !== user?.id) : [...prev, user!]
-    );
-  
     await handleAPI({
       endpoint: `/feed/posts/${post.id}/like`,
       method: "put",
       onFailure: (error) => {
         console.log("Error liking post:", error);
-        
-        // Hoàn tác nếu API lỗi
-        setPostLiked(prevLiked);
-        setLikes((prev) =>
-          prevLiked ? [...prev, user!] : prev.filter((like) => like.id !== user?.id)
-        );
-      }
+      },
     });
   };
-  
+
   const editComment = async (id: number, updateContent: string) => {
     await handleAPI({
       endpoint: `/feed/posts/${id}/comment`,
@@ -119,13 +138,15 @@ const Post = ({ post, setPosts }: PostProps) => {
       method: "put",
       onSuccess: () => {
         setComments((prev) =>
-          prev.map((cm) => (cm.id === id ? { ...cm, content: updateContent } : cm))
+          prev.map((cm) =>
+            cm.id === id ? { ...cm, content: updateContent } : cm
+          )
         );
       },
-      onFailure: (error) => console.log("Error editing comment:", error)
+      onFailure: (error) => console.log("Error editing comment:", error),
     });
   };
-  
+
   const deleteComment = async (id: number) => {
     await handleAPI({
       endpoint: `/feed/posts/${id}/comment`,
@@ -133,40 +154,37 @@ const Post = ({ post, setPosts }: PostProps) => {
       onSuccess: () => {
         setComments((prev) => prev.filter((cm) => cm.id !== id));
       },
-      onFailure: (error) => console.log("Error deleting comment:", error)
+      onFailure: (error) => console.log("Error deleting comment:", error),
     });
   };
-  
+
   const postComment = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!content.trim()) return;
-  
+
     await handleAPI<CommentModel>({
       endpoint: `/feed/posts/${post.id}/comment`,
       body: { content },
       method: "post",
       onSuccess: (data) => {
         setContent("");
-        setComments((prev) => [data, ...prev]);
+        // setComments((prev) => [data, ...prev]);
       },
-      onFailure: (error) => console.log("Error posting comment:", error)
+      onFailure: (error) => console.log("Error posting comment:", error),
     });
   };
-  
+
   const editPost = async (content: string, picture: string) => {
     await handleAPI<Post>({
       endpoint: `/feed/posts/${post.id}`,
       body: { content, picture },
       method: "put",
       onSuccess: (data) => {
-        setPosts((prev) =>
-          prev.map((p) => (p.id === post.id ? data : p))
-        );
+        setPosts((prev) => prev.map((p) => (p.id === post.id ? data : p)));
       },
-      onFailure: (error) => console.log("Error editing post:", error)
+      onFailure: (error) => console.log("Error editing post:", error),
     });
   };
-  
 
   return (
     <>
@@ -202,7 +220,10 @@ const Post = ({ post, setPosts }: PostProps) => {
               <div className={classes.title}>
                 {post.author.position + " at " + post.author.company}
               </div>
-              <TimeAgo date={post.updatedDate ?? post.creationDate} isUpdate={post.updatedDate ? true: false}/>
+              <TimeAgo
+                date={post.updatedDate ?? post.creationDate}
+                isUpdate={post.updatedDate ? true : false}
+              />
             </div>
           </div>
           <div>
