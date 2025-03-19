@@ -1,20 +1,48 @@
 
 import classes from './MessageItem.module.scss';
-import { User } from '../../../../authentication/contexts/AuthenticationContextProvider';
+import { useAuthentication, User } from '../../../../authentication/contexts/AuthenticationContextProvider';
 import { IMessage } from '../Conversations/Conversations';
 import TimeAgo from '../../../../../components/TimeAgo/TimeAgo';
 import { useEffect, useRef } from 'react';
 import handleAPI from '../../../../../configs/handleAPI';
+import { useWebSocket } from '../../../../ws/Ws';
 
 interface IProps{
     message: IMessage
-    user: User | null
+    userMessage: User | null
+    updateMessage: (message: IMessage) => void
+}
+enum MessageHandleType {
+  READ = "READ",
+  REACT_EMOJI = "REACT_EMOJI",
+  USER_TYPING= "USER_TYPING"
 }
 
-const MessageItem = ({message, user} : IProps) => {
+interface IMessageHandle<T=unknown>{
+  type: MessageHandleType
+  data?: T
+}
+
+const MessageItem = ({updateMessage,message, userMessage} : IProps) => {
+
+    const {user} = useAuthentication();
+    const ws = useWebSocket();
+
+    useEffect(() => {
+      const subscription =  ws?.subscribe(`/topic/messages/${message.id}`, (data) => {
+        const messageHandle: IMessageHandle = JSON.parse(data.body)
+        
+        if(messageHandle.type === MessageHandleType.READ){
+          updateMessage({...message, isRead: true})
+        }
+      })
+  
+      return ()=> subscription?.unsubscribe()
+    }, []);
+
     const messageRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-      if (!message.isRead && user?.id === message.receiver.id) {
+      if (!message.isRead && userMessage?.id === message.receiver.id) {
         handleAPI<void>({
           endpoint: `/messaging/conversations/messages/${message.id}`,
           method: "put",
@@ -22,7 +50,7 @@ const MessageItem = ({message, user} : IProps) => {
           onFailure: (error) => console.log(error),
         });
       }
-    }, [message.id, message.isRead, message.receiver.id, user?.id]);
+    }, [message.id, message.isRead, message.receiver.id, userMessage?.id]);
   
     useEffect(() => {
       messageRef.current?.scrollIntoView();
@@ -31,7 +59,7 @@ const MessageItem = ({message, user} : IProps) => {
       <div
         ref={messageRef}
         className={`${classes.root} ${
-          message.sender.id === user?.id ? classes.sent : classes.received
+          message.sender.id === userMessage?.id ? classes.sent : classes.received
         }`}
       >
         <div className={`${classes.message} `}>
@@ -51,7 +79,7 @@ const MessageItem = ({message, user} : IProps) => {
           </div>
           <div className={classes.content}>{message.content}</div>
         </div>
-        {message.sender.id == user?.id && (
+        {message.sender.id == userMessage?.id && (
           <div className={classes.status}>
             {!message.isRead ? (
               <>

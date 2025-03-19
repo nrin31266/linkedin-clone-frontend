@@ -16,7 +16,8 @@ import Conversations from "./../components/Conversations/Conversations";
 import { useWebSocket } from "../../../ws/Ws";
 import handleAPI from "../../../../configs/handleAPI";
 import Input from "../../../../components/Input/Input";
-import Messages from "../components/Messages/Messages";
+import Messages, { IMessage } from "../components/Messages/Messages";
+
 
 const Conversation = () => {
   const { id } = useParams();
@@ -26,6 +27,10 @@ const Conversation = () => {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [conversation, setConversation] = useState<IConversation | null>(null);
+ 
+
+
+
   const [conversations, setConversations] = useState<IConversation[]>([]);
 
   // const audioContext = new AudioContext();
@@ -174,7 +179,7 @@ const Conversation = () => {
         <>
           <div className={classes.top}>
             <button
-              
+
               onClick={() => navigate("/messaging")}
               className={classes.back}
             >
@@ -297,7 +302,7 @@ const Conversation = () => {
           )}
 
           {conversation && (
-            <Messages messages={conversation.messages} user={user} />
+            <Messages setMessages={(messages)=>{setConversation({...conversation, messages})}} messages={conversation.messages} user={user} />
           )}
           <form
             onSubmit={async (e) => {

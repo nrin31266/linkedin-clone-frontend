@@ -20,11 +20,11 @@ const ConversationItem = (props: ConversationItemProps) => {
   const ws = useWebSocket();
 
   const unreadMessagesCount = conversation.messages.filter(
-    (message) => !message.isRead
+    (message) => !message.isRead && message.receiver.id === user?.id
   ).length;
 
   useEffect(() => {
-    const subscription =  ws?.subscribe(`/topic/conversations/${conversation.id}/message`, (data) => {
+    const subscription =  ws?.subscribe(`/topic/conversations/${conversation.id}/messages`, (data) => {
       const message = JSON.parse(data.body)
       setConversation((pre)=>{
         const index = pre.messages.findIndex((m) => m.id === message.id);

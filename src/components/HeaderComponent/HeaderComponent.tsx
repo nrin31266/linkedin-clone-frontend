@@ -37,7 +37,7 @@ const HeaderComponent = () => {
     const subscription = webSocketClient?.subscribe(
       `/topic/users/${user?.id}/conversations`,
       (data) => {
-        const conversation = JSON.parse(data.body);
+        const conversation : IConversation = JSON.parse(data.body);
         console.log("Received conversation:", conversation);
         setConversations((pre) => {
           const index = pre.findIndex((c) => c.id === conversation.id);
@@ -48,6 +48,8 @@ const HeaderComponent = () => {
               c.id === conversation.id ? conversation : c
             );
           }
+
+          // if(conversation.messages)
         });
       }
     );
@@ -95,7 +97,6 @@ const HeaderComponent = () => {
     handleAPI<IConversation[]>({
       endpoint: "/messaging/conversations",
       onSuccess: (data) => {
-        setConversations(data);
       },
       onFailure: (error) => console.log("Error fetching conversations:", error),
     });
