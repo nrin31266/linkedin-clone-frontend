@@ -16,6 +16,7 @@ import Notifications from "./features/feed/pages/Notifications/Notifications";
 import { PostPage } from "./features/feed/pages/Feed/Feed";
 import Messaging from "./features/messaging/pages/Messaging/Messaging";
 import Conversation from "./features/messaging/pages/Conversation/Conversation";
+import DefaultConversation from "./features/messaging/pages/DefaultConversation/DefaultConversation";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
             element: <Messaging/>,
             path: "messaging",
             children: [
+              {
+                index: true,
+                element: <DefaultConversation/>
+              },
               {
                 element: <Conversation/>,
                 path: "conversation/:id"

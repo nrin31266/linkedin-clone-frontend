@@ -156,7 +156,7 @@ const Conversation = () => {
       body: rq,
       method: "post",
       onSuccess: (conversation) => {
-        navigate(`/messaging/conversations/${conversation.id}`);
+        navigate(`/messaging/conversation/${conversation.id}`);
       },
       onFailure: (error) => {
         console.log(error);
@@ -174,6 +174,7 @@ const Conversation = () => {
         <>
           <div className={classes.top}>
             <button
+              
               onClick={() => navigate("/messaging")}
               className={classes.back}
             >
