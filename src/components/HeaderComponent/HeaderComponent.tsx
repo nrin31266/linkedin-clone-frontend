@@ -2,11 +2,14 @@ import { NavLink } from "react-router-dom";
 import classes from "./HeaderComponent.module.scss";
 import Input from "../Input/Input";
 import { useAuthentication } from "../../features/authentication/contexts/AuthenticationContextProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Profile from "./components/Profile";
 import { useWebSocket } from "../../features/ws/Ws";
-import { Notification } from './../../features/feed/pages/Notifications/Notifications';
+import { Notification } from "./../../features/feed/pages/Notifications/Notifications";
 import handleAPI from "../../configs/handleAPI";
+import Conversations, {
+  IConversation,
+} from "./../../features/messaging/pages/components/Conversations/Conversations";
 
 const HeaderComponent = () => {
   const { user } = useAuthentication();
@@ -18,40 +21,85 @@ const HeaderComponent = () => {
   const webSocketClient = useWebSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const nonReadNotificationCount = notifications.filter((n) => !n.isRead).length;
+  const nonReadNotificationCount = notifications.filter(
+    (n) => !n.isRead
+  ).length;
+
+  const audioRef = useRef(new Audio("/receive-notify.mp3"));
+  const receiveMessageAudioRef = useRef(new Audio("/new-message.mp3"));
+  const [conversations, setConversations] = useState<IConversation[]>([]);
+  const unReadMessagesCount = conversations.reduce(
+    (total, c) => total + c.messages.filter((m) => !m.isRead).length,
+    0
+  );
 
   useEffect(() => {
-    const subscribe = webSocketClient?.subscribe(`/topic/users/${user?.id}/notifications`, (message)=>{
-      const notification = JSON.parse(message.body)
-      setNotifications((pre)=>{
-        const index = pre.findIndex((n) => n.id === notification.id);
-        if (index === -1) {
-          return [notification, ...pre];
-        }else{
-          return pre.map((n) => (n.id === notification.id ? notification : n));
-        }
-      })
-    } )
-      
+    const subscription = webSocketClient?.subscribe(
+      `/topic/users/${user?.id}/conversations`,
+      (data) => {
+        const conversation = JSON.parse(data.body);
+        console.log("Received conversation:", conversation);
+        setConversations((pre) => {
+          const index = pre.findIndex((c) => c.id === conversation.id);
+          if (index === -1) {
+            return [conversation, ...pre];
+          } else {
+            return pre.map((c) =>
+              c.id === conversation.id ? conversation : c
+            );
+          }
+        });
+      }
+    );
+    return () => subscription?.unsubscribe();
+  }, [webSocketClient, user?.id]);
+  useEffect(() => {
+    const subscribe = webSocketClient?.subscribe(
+      `/topic/users/${user?.id}/notifications`,
+      (message) => {
+        const notification = JSON.parse(message.body);
+        audioRef.current.play();
+
+        setNotifications((pre) => {
+          const index = pre.findIndex((n) => n.id === notification.id);
+          if (index === -1) {
+            return [notification, ...pre];
+          } else {
+            return pre.map((n) =>
+              n.id === notification.id ? notification : n
+            );
+          }
+        });
+      }
+    );
+
     return () => subscribe?.unsubscribe();
   }, [user?.id, webSocketClient]);
 
   useEffect(() => {
-    const fetchNotifications = async () =>{
+    const fetchNotifications = async () => {
       await handleAPI<Notification[]>({
         endpoint: "/notifications",
         onSuccess: (data) => {
-
-          console.log(data)
           setNotifications(data);
         },
-        onFailure: (error) => console.log("Error fetching notifications:", error)
-      })
-    }
+        onFailure: (error) =>
+          console.log("Error fetching notifications:", error),
+      });
+    };
 
     fetchNotifications();
   }, []);
 
+  useEffect(() => {
+    handleAPI<IConversation[]>({
+      endpoint: "/messaging/conversations",
+      onSuccess: (data) => {
+        setConversations(data);
+      },
+      onFailure: (error) => console.log("Error fetching conversations:", error),
+    });
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -63,10 +111,8 @@ const HeaderComponent = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-
   return (
-    <div className={classes.root} 
-    >
+    <div className={classes.root}>
       <div className={classes.container}>
         <div className={classes.left}>
           <NavLink to={"/"}>
@@ -149,7 +195,14 @@ const HeaderComponent = () => {
                   >
                     <path d="M16 4H8a7 7 0 000 14h4v4l8.16-5.39A6.78 6.78 0 0023 11a7 7 0 00-7-7zm-8 8.25A1.25 1.25 0 119.25 11 1.25 1.25 0 018 12.25zm4 0A1.25 1.25 0 1113.25 11 1.25 1.25 0 0112 12.25zm4 0A1.25 1.25 0 1117.25 11 1.25 1.25 0 0116 12.25z"></path>
                   </svg>
-                  <span>Messaging</span>
+                  <div>
+                    {unReadMessagesCount > 0 ? (
+                      <span className={classes.badge}>
+                        {unReadMessagesCount}
+                      </span>
+                    ) : null}
+                    <span>Messaging</span>
+                  </div>
                 </NavLink>
               </li>
               <li className={classes.notifications}>
@@ -172,13 +225,14 @@ const HeaderComponent = () => {
                     <path d="M22 19h-8.28a2 2 0 11-3.44 0H2v-1a4.52 4.52 0 011.17-2.83l1-1.17h15.7l1 1.17A4.42 4.42 0 0122 18zM18.21 7.44A6.27 6.27 0 0012 2a6.27 6.27 0 00-6.21 5.44L5 13h14z"></path>
                   </svg>
 
-                 <div>
-                  {
-                    nonReadNotificationCount > 0 ?
-                    <span className={classes.badge}>{nonReadNotificationCount}</span> : null
-                  }
-                 <span>Notifications</span>
-                 </div>
+                  <div>
+                    {nonReadNotificationCount > 0 ? (
+                      <span className={classes.badge}>
+                        {nonReadNotificationCount}
+                      </span>
+                    ) : null}
+                    <span>Notifications</span>
+                  </div>
                 </NavLink>
               </li>
             </ul>

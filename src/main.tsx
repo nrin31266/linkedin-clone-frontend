@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { Children, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.scss";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -14,6 +14,8 @@ import Profile from "./features/authentication/pages/Profile/Profile";
 import VerifyEmail from "./features/authentication/pages/VerifyEmail/VerifyEmail";
 import Notifications from "./features/feed/pages/Notifications/Notifications";
 import { PostPage } from "./features/feed/pages/Feed/Feed";
+import Messaging from "./features/messaging/pages/Messaging/Messaging";
+import Conversation from "./features/messaging/pages/Conversation/Conversation";
 
 const router = createBrowserRouter([
   {
@@ -36,8 +38,14 @@ const router = createBrowserRouter([
             path: "network",
           },
           {
-            element: "message",
+            element: <Messaging/>,
             path: "messaging",
+            children: [
+              {
+                element: <Conversation/>,
+                path: "conversation/:id"
+              }
+            ]
           },
           {
             element: <Notifications />,

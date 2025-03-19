@@ -1,0 +1,101 @@
+.root {
+
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    
+    .messaging {
+        height: 100%;
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.3rem;
+
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+
+
+        h1 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        button.new {
+            border-radius: 50%;
+            background-color: #f5f5f5;
+            width: 2rem;
+            font-size: 1.2rem;
+            height: 2rem;
+            transition: background-color 0.3s ease-in-out;
+
+            &:hover {
+                background-color: #e0e0e0;
+            }
+        }
+    }
+
+
+
+    .right {
+        display: none;
+    }
+
+    @media screen and (width >=1135px) {
+
+        grid-template-columns: 1fr 20rem;
+        align-items: flex-start;
+
+        .right {
+            display: block;
+        }
+
+    }
+
+    @media screen and (width >=1024px) {
+
+        .messaging {
+            display: grid;
+            grid-template-columns: 16rem 1fr;
+
+        }
+
+        .sidebar {
+            border-right: 1px solid #e0e0e0;
+        }
+
+    }
+    
+    @media screen and (width < 1024px) {
+
+        .conversations {
+            transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
+    
+            
+        }
+        .hidden {
+            transform: translateX(-30%);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            height: 0;
+    
+        }
+        .show {
+            // transform: translateX(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+    }
+
+    
+
+
+}
